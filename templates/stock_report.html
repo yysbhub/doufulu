@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="content">
+
+        <div class="report-container">
+            <!-- 库存统计 -->
+            <div class="report-section">
+                <h3>库存统计</h3>
+                <div class="table-container">
+                    <table id="inventoryTable">
+                        <thead>
+                            <tr>
+                                <th>物品名称</th>
+                                <th>物品规格</th>
+                                <th>物品位置</th>
+                                <th>物品数量</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in inventory %}
+                            <tr>
+                                <td>{{ item.item_name }}</td>
+                                <td>{{ item.item_spec }}</td>
+                                <td>{{ item.location }}</td>
+                                <td>{{ item.stock }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    <button class="export-button" onclick="exportTableToCSV('inventoryTable', 'inventory.csv')">导出CSV</button>
+                </div>
+            </div>
+
+            <!-- 入库记录 -->
+            <div class="report-section">
+                <h3>入库记录</h3>
+                <div class="table-container">
+                    <table id="inboundTable">
+                        <thead>
+                            <tr>
+                                <th>物品名称</th>
+                                <th>物品规格</th>
+                                <th>入库数量</th>
+                                <th>入库日期</th>
+                                <th>位置</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in inbound_records %}
+                            <tr>
+                                <td>{{ record.item_name }}</td>
+                                <td>{{ record.item_spec }}</td>
+                                <td>{{ record.inbound_qty }}</td>
+                                <td>{{ record.inbound_date }}</td>
+                                <td>{{ record.warehouse_number }}号仓库{{ record.shelf_number }}号货架{{ record.layer_number }}层</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    <button class="export-button" onclick="exportTableToCSV('inboundTable', 'inbound.csv')">导出CSV</button>
+                </div>
+            </div>
+
+            <!-- 出库记录 -->
+            <div class="report-section">
+                <h3>出库记录</h3>
+                <div class="table-container">
+                    <table id="outboundTable">
+                        <thead>
+                            <tr>
+                                <th>物品名称</th>
+                                <th>物品规格</th>
+                                <th>出库数量</th>
+                                <th>出库人员</th>
+                                <th>出库用途</th>
+                                <th>出库日期</th>
+                                <th>位置</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in outbound_records %}
+                            <tr>
+                                <td>{{ record.item_name }}</td>
+                                <td>{{ record.item_spec }}</td>
+                                <td>{{ record.outbound_qty }}</td>
+                                <td>{{ record.outbound_person }}</td>
+                                <td>{{ record.outbound_purpose }}</td>
+                                <td>{{ record.outbound_date }}</td>
+                                <td>{{ record.warehouse_number }}号仓库{{ record.shelf_number }}号货架{{ record.layer_number }}层</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    <button class="export-button" onclick="exportTableToCSV('outboundTable', 'outbound.csv')">导出CSV</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function exportTableToCSV(tableId, filename) {
+            var csv = [];
+            var table = document.getElementById(tableId);
+            var rows = table.querySelectorAll("tr");
+
+            for (var i = 0; i < rows.length; i++) {
+                var row = [];
+                var cols = rows[i].querySelectorAll("td, th");
+
+                for (var j = 0; j < cols.length; j++) {
+                    // 清理数据，移除逗号和换行符，并用双引号包裹
+                    let data = cols[j].textContent.replace(/,/g, "，").replace(/(\r\n|\n|\r)/gm, "");
+                    data = '"' + data + '"';
+                    row.push(data);
+                }
+
+                csv.push(row.join(","));
+            }
+
+            // 添加 BOM 标识，解决中文乱码问题
+            var csvData = "\uFEFF" + csv.join("\r\n");
+
+            // 下载 CSV 文件
+            downloadCSV(csvData, filename);
+        }
+
+        function downloadCSV(csvData, filename) {
+            var csvFile;
+            var downloadLink;
+
+            // CSV 文件
+            csvFile = new Blob([csvData], { type: "text/csv;charset=utf-8" });
+
+            // 下载链接
+            downloadLink = document.createElement("a");
+
+            // 文件名
+            downloadLink.download = filename;
+
+            // 创建一个链接到文件的 URL
+            downloadLink.href = window.URL.createObjectURL(csvFile);
+
+            // 隐藏下载链接
+            downloadLink.style.display = "none";
+
+            // 将链接添加到页面
+            document.body.appendChild(downloadLink);
+
+            // 点击下载链接
+            downloadLink.click();
+        }
+    </script>
+
+    <style>
+        .table-container {
+            position: relative; /* 设置相对定位 */
+        }
+
+        .export-button {
+            position: absolute; /* 设置绝对定位 */
+            bottom: 0; /* 底部对齐 */
+            right: 0; /* 右侧对齐 */
+            margin: 5px; /* 可选：添加一些边距 */
+        }
+    </style>
+{% endblock %}

@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="content">
+
+    <!-- Flex 容器 -->
+    <div class="flex-container">
+
+        <!-- 入库表单 -->
+        <div class="form-section flex-item">
+            <h3>入库</h3>
+            <form method="post">
+                <input type="hidden" name="form_type" value="in">
+                <label for="item_id_in">物品:</label>
+                <select name="item_id" id="item_id_in" class="select2-item" required>
+                    <option value="">请选择物品</option>
+                    {% for item in all_items %}
+                        <option value="{{ item.id }}">{{ item.item_name }} {{ item.item_spec }}</option>
+                    {% endfor %}
+                </select><br>
+                <label for="inbound_qty">入库数量:</label>
+                <input type="number" name="inbound_qty" id="inbound_qty" required><br>
+                <label for="inbound_date">入库日期:</label>
+                <input type="date" name="inbound_date" id="inbound_date" required><br>
+                <label for="warehouse_number_in">仓库号:</label>
+                <input type="number" name="warehouse_number" id="warehouse_number_in" required><br>
+                <label for="shelf_number_in">货架号:</label>
+                <input type="number" name="shelf_number" id="shelf_number_in" required><br>
+                <label for="layer_number_in">层数:</label>
+                <input type="number" name="layer_number" id="layer_number_in" required><br>
+                <button type="submit">提交入库</button>
+            </form>
+        </div>
+
+        <!-- 出库表单 -->
+        <div class="form-section flex-item">
+            <h3>出库</h3>
+            <form method="post">
+                <input type="hidden" name="form_type" value="out">
+                <label for="item_id_out">物品:</label>
+                <select name="item_id" id="item_id_out" class="select2-item" required onchange="loadLocations()">
+                    <option value="">请选择物品</option>
+                    {% for item in stocked_items %}
+                        <option value="{{ item.id }}">{{ item.item_name }} {{ item.item_spec }}</option>
+                    {% endfor %}
+                </select><br>
+                <label for="outbound_qty">出库数量:</label>
+                <input type="number" name="outbound_qty" id="outbound_qty" required><br>
+                <label for="outbound_date">出库日期:</label>
+                <input type="date" name="outbound_date" id="outbound_date" required><br>
+                <label for="outbound_person">出库人员:</label>
+                <input type="text" name="outbound_person" id="outbound_person" required><br>
+                <label for="outbound_purpose">出库用途:</label>
+                <input type="text" name="outbound_purpose" id="outbound_purpose" required><br>
+                <label for="location_id_out">出库位置:</label>
+                <div id="location_options">
+                    <select name="location_id" id="location_id_out" required>
+                        <option value="">请选择位置</option>
+                        {% for location in locations %}
+                            <option value="{{ location.id }}">
+                                {{ location.warehouse_number }}号仓库
+                                {{ location.shelf_number }}号货架
+                                {{ location.layer_number }}层
+                            </option>
+                    {% endfor %}
+                </select><br>
+                </div>
+                <button type="submit">提交出库</button>
+            </form>
+        </div>
+
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    $('.select2-item').select2();
+});
+
+function loadLocations() {
+    var item_id = document.getElementById('item_id_out').value;
+    if (item_id) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', '/get_locations?item_id=' + item_id, true);
+        xhr.onload = function() {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                var locations = JSON.parse(xhr.responseText);
+                var locationSelect = document.getElementById('location_id_out');
+                locationSelect.innerHTML = '<option value="">请选择位置</option>';
+                for (var i = 0; i < locations.length; i++) {
+                    var location = locations[i];
+                    var option = document.createElement('option');
+                    option.value = location.id;
+                    option.text = location.warehouse_number + '号仓库' + location.shelf_number + '号货架' + location.layer_number + '层';
+                    locationSelect.appendChild(option);
+                }
+            } else {
+                console.error('Request failed with status: ' + xhr.status);
+            }
+        };
+        xhr.onerror = function() {
+            console.error('Request failed');
+        };
+        xhr.send();
+    }
+}
+</script>
+
+<style>
+    .flex-container {
+        display: flex;
+        justify-content: space-between; /* 可选，平均分配空间 */
+    }
+
+    .flex-item {
+        width: 48%; /* 稍微小于 50%，留出一些间距 */
+    }
+</style>
+{% endblock %}

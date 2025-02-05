@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="content">
+        <h2>欢迎使用出入库管理系统</h2>
+        <p>这是假壹洺写的出入库管理系统，可以帮助豆哥管理库存。</p>
+
+        <div class="dashboard">
+            <div class="dashboard-item">
+                <h3><a href="{{ url_for('items') }}">物品列表</a></h3>
+                <p>查看所有已注册的物品。</p>
+            </div>
+            <div class="dashboard-item">
+                <h3><a href="{{ url_for('add_item') }}">添加物品</a></h3>
+                <p>添加新的物品到系统。</p>
+            </div>
+            <div class="dashboard-item">
+                <h3><a href="{{ url_for('add_stock') }}">出入库管理</a></h3>
+                <p>进行物品的入库和出库操作。</p>
+            </div>
+              <div class="dashboard-item">
+                <h3><a href="{{ url_for('stock_report') }}">库存统计</a></h3>
+                <p>查看当前的库存信息和出入库记录。</p>
+            </div>
+        </div>
+    </div>
+{% endblock %}
