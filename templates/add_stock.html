@@ -107,13 +107,28 @@ function loadLocations() {
 </script>
 
 <style>
+    /* 默认样式：窄屏幕上下显示 */
     .flex-container {
         display: flex;
-        justify-content: space-between; /* 可选，平均分配空间 */
+        flex-direction: column; /* 垂直排列 */
     }
 
     .flex-item {
-        width: 48%; /* 稍微小于 50%，留出一些间距 */
+        width: 100%; /* 占据全部宽度 */
+        margin-bottom: 20px; /* 添加间距 */
+    }
+
+    /* 媒体查询：宽屏幕并列显示 */
+    @media (min-width: 768px) { /* 768px 是一个常用的平板电脑的宽度，可以根据需要调整 */
+        .flex-container {
+            flex-direction: row; /* 水平排列 */
+            justify-content: space-between; /* 平均分配空间 */
+        }
+
+        .flex-item {
+            width: 48%; /* 稍微小于 50%，留出一些间距 */
+            margin-bottom: 0; /* 移除底部间距 */
+        }
     }
 </style>
 {% endblock %}
