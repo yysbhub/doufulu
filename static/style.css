@@ -1,0 +1,336 @@
+/* ==========================================================================
+   Global Styles
+   ========================================================================== */
+
+   body {
+    font-family: sans-serif;
+    margin: 20px; /* 页面外边距 */
+    background-color: #f8f9fa; /* 浅灰色背景 */
+    color: #343a40; /* 深灰色文本 */
+    line-height: 1.6; /* 行高 */
+}
+
+/* ==========================================================================
+   Navigation Bar
+   ========================================================================== */
+
+nav {
+    margin-bottom: 20px; /* 导航栏下外边距 */
+    background-color: #343a40; /* 深灰色背景 */
+    padding: 10px 0; /* 上下内边距 */
+    text-align: center; /* 居中导航 */
+    border-radius: 8px; /* 添加圆角 */
+}
+
+
+nav a {
+    color: #fff; /* 白色链接文本 */
+    text-decoration: none; /* 去除链接下划线 */
+    margin: 0 15px; /* 链接左右外边距 */
+    transition: color 0.3s ease; /* 颜色过渡效果 */
+}
+
+/* ==========================================================================
+   Active Link Styles
+   ========================================================================== */
+
+nav a.active {
+    font-weight: bold; /* 加粗 */
+    color: #17a2b8; /* 突出显示颜色 */
+    text-decoration: underline; /* 添加下划线 */
+}
+
+nav a:hover {
+    color: #17a2b8; /* 鼠标悬停时链接颜色 */
+    text-decoration: underline; /* 鼠标悬停时添加下划线 */
+}
+
+/* ==========================================================================
+   Content Area
+   ========================================================================== */
+
+.content {
+    background-color: #fff; /* 白色背景 */
+    padding: 20px; /* 内边距 */
+    border-radius: 8px; /* 圆角 */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* 阴影效果 */
+    margin-bottom: 20px; /* 下外边距 */
+}
+
+
+/* ==========================================================================
+   Table Styles
+   ========================================================================== */
+
+table {
+    border-collapse: collapse; /* 合并表格边框 */
+    width: 100%; /* 表格宽度 */
+    margin-bottom: 20px; /* 表格外边距 */
+}
+
+th,
+td {
+    border: 1px solid #ccc; /* 单元格边框 */
+    padding: 8px; /* 单元格内边距 */
+    text-align: left; /* 文本左对齐 */
+}
+
+th {
+    background-color: #f2f2f2; /* 表头背景色 */
+    font-weight: bold; /* 表头文本加粗 */
+}
+
+/* ==========================================================================
+   Form Styles
+   ========================================================================== */
+
+form {
+    margin-top: 20px; /* 表单上外边距 */
+}
+
+label {
+    display: block; /* 标签独占一行 */
+    margin-bottom: 5px; /* 标签下外边距 */
+}
+
+input[type="text"],
+input[type="number"],
+input[type="password"],
+textarea {
+    width: calc(100% - 16px); /* 输入框宽度 */
+    padding: 8px; /* 输入框内边距 */
+    margin-bottom: 10px; /* 输入框下外边距 */
+    border: 1px solid #ccc; /* 输入框边框 */
+    border-radius: 4px; /* 输入框圆角 */
+    box-sizing: border-box; /* 使用 border-box 模型 */
+}
+
+textarea {
+    height: 100px; /* 文本域高度 */
+}
+
+button {
+    background-color: #007bff; /* 蓝色按钮背景 */
+    color: #fff; /* 白色按钮文本 */
+    padding: 10px 15px; /* 按钮内边距 */
+    border: none; /* 去除按钮边框 */
+    border-radius: 4px; /* 按钮圆角 */
+    cursor: pointer; /* 鼠标指针样式 */
+    transition: background-color 0.3s ease; /* 背景色过渡效果 */
+}
+
+button:hover {
+    background-color: #0056b3; /* 鼠标悬停时按钮背景色 */
+}
+
+/* ==========================================================================
+   Error Message Styles
+   ========================================================================== */
+
+.error {
+    color: #dc3545; /* 红色错误文本 */
+    margin-top: 10px; /* 错误提示上外边距 */
+}
+
+/* ==========================================================================
+   Select Styles
+   ========================================================================== */
+
+   select {
+    width: calc(100% - 16px); /* 下拉框宽度 */
+    padding: 8px; /* 内边距 */
+    margin-bottom: 10px; /* 下外边距 */
+    border: 1px solid #ccc; /* 边框 */
+    border-radius: 4px; /* 圆角 */
+    box-sizing: border-box; /* 使用 border-box 模型 */
+    background-color: #fff; /* 背景色 */
+    color: #343a40; /* 文本颜色 */
+    appearance: none; /* 移除默认样式 */
+    -webkit-appearance: none; /* 兼容旧版浏览器 */
+    -moz-appearance: none; /* 兼容旧版浏览器 */
+    background-image: url("data:image/svg+xml;utf8,<svg fill='gray' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>"); /* 添加下拉箭头 */
+    background-repeat: no-repeat;
+    background-position: right 8px top 50%;
+    background-size: 16px;
+}
+
+select:focus {
+    border-color: #007bff; /* 聚焦时边框颜色 */
+    outline: none; /* 去除默认聚焦边框 */
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); /* 聚焦时阴影 */
+}
+
+select::-ms-expand {
+    display: none; /* 移除 IE 浏览器默认下拉箭头 */
+}
+/* ==========================================================================
+   Table Styles (Enhanced)
+   ========================================================================== */
+
+table {
+    width: 100%; /* 表格宽度 */
+    border-collapse: collapse; /* 合并表格边框 */
+    margin-bottom: 20px; /* 表格外边距 */
+    background-color: #fff; /* 背景色 */
+    border: 1px solid #ddd; /* 表格边框 */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05); /* 表格阴影 */
+}
+
+th,
+td {
+    border: 1px solid #ddd; /* 单元格边框 */
+    padding: 10px; /* 单元格内边距 */
+    text-align: left; /* 文本左对齐 */
+}
+
+th {
+    background-color: #f8f9fa; /* 表头背景色 */
+    font-weight: bold; /* 表头文本加粗 */
+    color: #343a40; /* 表头文本颜色 */
+}
+
+tr:nth-child(even) {
+    background-color: #f9f9f9; /* 偶数行背景色 */
+}
+
+tr:hover {
+    background-color: #f0f0f0; /* 鼠标悬停时行背景色 */
+}
+
+/* 可选：响应式表格样式 */
+@media (max-width: 768px) {
+    table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap; /* 防止表格换行 */
+    }
+    th, td {
+        min-width: 100px; /* 单元格最小宽度 */
+    }
+}
+
+
+/* ==========================================================================
+   Form Styles
+   ========================================================================== */
+
+   .form-container {
+    display: flex; /* 使用 Flexbox 布局 */
+    flex-wrap: wrap; /* 允许项目换行 */
+    justify-content: space-around; /* 项目之间留有空隙 */
+    margin-top: 20px; /* 上外边距 */
+}
+
+.form-section {
+    width: calc(45% - 20px); /* 每个表单部分宽度 */
+    margin: 10px; /* 外边距 */
+    padding: 20px; /* 内边距 */
+    border: 1px solid #ddd; /* 边框 */
+    border-radius: 8px; /* 圆角 */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05); /* 阴影 */
+    box-sizing: border-box; /* 使用 border-box 模型 */
+}
+
+.form-section h3 {
+    margin-bottom: 15px; /* 标题下外边距 */
+    text-align: center; /* 标题居中 */
+}
+
+.form-section label {
+    display: block; /* 使 label 独占一行 */
+    margin-bottom: 5px; /* label 下外边距 */
+    font-weight: bold; /* 字体加粗 */
+}
+
+.form-section input[type="text"],
+.form-section input[type="number"],
+.form-section select,
+.form-section input[type="date"] {
+    width: calc(100% - 12px); /* 输入框宽度 */
+    padding: 8px; /* 内边距 */
+    margin-bottom: 10px; /* 下外边距 */
+    border: 1px solid #ddd; /* 边框 */
+    border-radius: 4px; /* 圆角 */
+    box-sizing: border-box; /* 使用 border-box 模型 */
+}
+
+.form-section input[type="date"] {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-color: #fff;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  width: calc(100% - 12px);
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+
+.form-section input[type="date"]::-webkit-calendar-picker-indicator {
+  color: rgba(0, 0, 0, 0);
+  opacity: 1;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="15" viewBox="0 0 24 24"><path fill="%23bbbbbb" d="M20 3h-1V1h-2v2H7V1H5v2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 18H4V8h16v13z"/></svg>');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 16px 16px;
+}
+
+.form-section button {
+    background-color: #007bff; /* 按钮背景颜色 */
+    color: white; /* 按钮文字颜色 */
+    padding: 10px 15px; /* 按钮内边距 */
+    border: none; /* 去除边框 */
+    border-radius: 4px; /* 圆角 */
+    cursor: pointer; /* 鼠标悬停时显示手型 */
+    display: block; /* 使按钮独占一行 */
+    margin: 10px auto 0; /* 按钮外边距 */
+}
+
+.form-section button:hover {
+    background-color: #0056b3; /* 鼠标悬停时按钮背景颜色 */
+}
+
+@media (max-width: 768px) {
+    .form-section {
+        width: calc(100% - 20px); /* 小屏幕时表单部分宽度 */
+    }
+}
+
+
+/* ==========================================================================
+   Report Styles
+   ========================================================================== */
+
+.report-container {
+    margin-top: 20px;
+}
+
+.report-section {
+    margin-bottom: 30px;
+}
+
+.report-section h3 {
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.report-section table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.report-section th,
+.report-section td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.report-section th {
+    background-color: #f2f2f2;
+}
+
+
