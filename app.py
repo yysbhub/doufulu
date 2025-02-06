@@ -114,6 +114,8 @@ def add_stock():
             warehouse_number = request.form['warehouse_number']
             shelf_number = request.form['shelf_number']
             layer_number = request.form['layer_number']
+            sn_code = request.form.get('sn_code')  # 获取 SN 码
+
             
             conn = get_db_connection()
             
@@ -128,8 +130,8 @@ def add_stock():
             else:
                 location_id = location['id']
             
-            conn.execute('INSERT INTO inbound (item_id, inbound_qty, inbound_date, location_id) VALUES (?, ?, ?, ?)',
-                         (item_id, inbound_qty, inbound_date, location_id))
+            conn.execute('INSERT INTO inbound (item_id, inbound_qty, inbound_date, location_id, sn_code) VALUES (?, ?, ?, ?, ?)',  # 插入 SN 码
+                         (item_id, inbound_qty, inbound_date, location_id, sn_code))
             conn.commit()
             conn.close()
             return redirect(url_for('inbound_records'))
@@ -141,6 +143,7 @@ def add_stock():
             outbound_person = request.form['outbound_person']
             outbound_purpose = request.form['outbound_purpose']
             outbound_date = request.form['outbound_date']
+            sn_code = request.form.get('sn_code')  # 获取 SN 码
             
             try:
                 location_id = request.form['location_id']
@@ -170,8 +173,8 @@ def add_stock():
                 #outbound_qty = current_stock
 
             
-            conn.execute('INSERT INTO outbound (item_id, outbound_qty, outbound_person, outbound_purpose, outbound_date, location_id) VALUES (?, ?, ?, ?, ?, ?)',
-                         (item_id, outbound_qty, outbound_person, outbound_purpose, outbound_date, location_id))
+            conn.execute('INSERT INTO outbound (item_id, outbound_qty, outbound_person, outbound_purpose, outbound_date, location_id, sn_code) VALUES (?, ?, ?, ?, ?, ?, ?)',  # 插入 SN 码
+                         (item_id, outbound_qty, outbound_person, outbound_purpose, outbound_date, location_id, sn_code))
             conn.commit()
             conn.close()
             return redirect(url_for('outbound_records'))
@@ -187,6 +190,7 @@ def add_stock_in():
         warehouse_number = request.form['warehouse_number']
         shelf_number = request.form['shelf_number']
         layer_number = request.form['layer_number']
+        sn_code = request.form['sn_code'] # 获取SN码
 
         conn = get_db_connection()
 
@@ -201,8 +205,8 @@ def add_stock_in():
         else:
             location_id = location['id']
 
-        conn.execute('INSERT INTO inbound (item_id, inbound_qty, inbound_date, location_id) VALUES (?, ?, ?, ?)',
-                     (item_id, inbound_qty, inbound_date, location_id))
+        conn.execute('INSERT INTO inbound (item_id, inbound_qty, inbound_date, location_id, sn_code) VALUES (?, ?, ?, ?, ?)', # 插入SN码
+                     (item_id, inbound_qty, inbound_date, location_id, sn_code))
         conn.commit()
         conn.close()
         return redirect(url_for('inbound_records'))
@@ -217,6 +221,7 @@ def add_stock_out():
         outbound_person = request.form['outbound_person']
         outbound_purpose = request.form['outbound_purpose']
         outbound_date = request.form['outbound_date']
+        sn_code = request.form['sn_code'] # 获取SN码
 
         try:
             location_id = request.form['location_id']
@@ -225,8 +230,8 @@ def add_stock_out():
             return redirect(url_for('add_stock'))
 
         conn = get_db_connection()
-        conn.execute('INSERT INTO outbound (item_id, outbound_qty, outbound_person, outbound_purpose, outbound_date, location_id) VALUES (?, ?, ?, ?, ?, ?)',
-                     (item_id, outbound_qty, outbound_person, outbound_purpose, outbound_date, location_id))
+        conn.execute('INSERT INTO outbound (item_id, outbound_qty, outbound_person, outbound_purpose, outbound_date, location_id, sn_code) VALUES (?, ?, ?, ?, ?, ?, ?)', # 插入SN码
+                     (item_id, outbound_qty, outbound_person, outbound_purpose, outbound_date, location_id, sn_code))
         conn.commit()
         conn.close()
         return redirect(url_for('outbound_records'))
@@ -262,6 +267,14 @@ def get_locations():
         })
     return jsonify(location_list)
 
+@app.route('/get_sns')  # 新的路由
+def get_sns():
+    item_id = request.args.get('item_id')
+    conn = get_db_connection()
+    sns = [row[0] for row in conn.execute('SELECT sn_code FROM inbound WHERE item_id = ? AND sn_code IS NOT NULL', (item_id,)).fetchall()]
+    conn.close()
+    return jsonify(sns)
+
 
 @app.route('/stock_report')
 def stock_report():
@@ -290,13 +303,13 @@ def stock_report():
             items.item_name, items.item_spec, location;
     ''').fetchall()
     inbound_records = conn.execute('''
-        SELECT inbound.*, items.item_name, items.item_spec, locations.warehouse_number, locations.shelf_number, locations.layer_number
+        SELECT inbound.*, items.item_name, items.item_spec, locations.warehouse_number, locations.shelf_number, locations.layer_number, inbound.sn_code  -- 添加 sn_code
         FROM inbound
         JOIN items ON inbound.item_id = items.id
         JOIN locations ON inbound.location_id = locations.id
     ''').fetchall()
     outbound_records = conn.execute('''
-        SELECT outbound.*, items.item_name, items.item_spec, outbound_person, outbound_purpose, outbound_date, locations.warehouse_number, locations.shelf_number, locations.layer_number
+        SELECT outbound.*, items.item_name, items.item_spec, outbound_person, outbound_purpose, outbound_date, locations.warehouse_number, locations.shelf_number, locations.layer_number, outbound.sn_code  -- 添加 sn_code
         FROM outbound
         JOIN items ON outbound.item_id = items.id
         JOIN locations ON outbound.location_id = locations.id

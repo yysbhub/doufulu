@@ -44,6 +44,7 @@
                                 <th>入库数量</th>
                                 <th>入库日期</th>
                                 <th>位置</th>
+                                <th>SN码</th>  <!-- 添加 SN 码列 -->
                             </tr>
                         </thead>
                         <tbody>
@@ -54,6 +55,7 @@
                                 <td>{{ record.inbound_qty }}</td>
                                 <td>{{ record.inbound_date }}</td>
                                 <td>{{ record.warehouse_number }}号仓库{{ record.shelf_number }}号货架{{ record.layer_number }}层</td>
+                                <td>{{ record.sn_code }}</td>  <!-- 添加 SN 码数据 -->
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -76,6 +78,7 @@
                                 <th>出库用途</th>
                                 <th>出库日期</th>
                                 <th>位置</th>
+                                <th>SN码</th>  <!-- 添加 SN 码列 -->
                             </tr>
                         </thead>
                         <tbody>
@@ -88,6 +91,7 @@
                                 <td>{{ record.outbound_purpose }}</td>
                                 <td>{{ record.outbound_date }}</td>
                                 <td>{{ record.warehouse_number }}号仓库{{ record.shelf_number }}号货架{{ record.layer_number }}层</td>
+                                <td>{{ record.sn_code }}</td>  <!-- 添加 SN 码数据 -->
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -152,16 +156,5 @@
         }
     </script>
 
-    <style>
-        .table-container {
-            position: relative; /* 设置相对定位 */
-        }
 
-        .export-button {
-            position: absolute; /* 设置绝对定位 */
-            bottom: 0; /* 底部对齐 */
-            right: 0; /* 右侧对齐 */
-            margin: 5px; /* 可选：添加一些边距 */
-        }
-    </style>
 {% endblock %}

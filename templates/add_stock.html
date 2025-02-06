@@ -28,6 +28,8 @@
                 <input type="number" name="shelf_number" id="shelf_number_in" required><br>
                 <label for="layer_number_in">层数:</label>
                 <input type="number" name="layer_number" id="layer_number_in" required><br>
+                <label for="sn_code_in">SN码:</label>
+                <input type="text" name="sn_code" id="sn_code_in"><br>  <!-- 添加 SN 码输入框 -->
                 <button type="submit">提交入库</button>
             </form>
         </div>
@@ -38,7 +40,7 @@
             <form method="post">
                 <input type="hidden" name="form_type" value="out">
                 <label for="item_id_out">物品:</label>
-                <select name="item_id" id="item_id_out" class="select2-item" required onchange="loadLocations()">
+                <select name="item_id" id="item_id_out" class="select2-item" required onchange="loadLocations(); loadSNs()">  <!-- 修改 onchange 事件 -->
                     <option value="">请选择物品</option>
                     {% for item in stocked_items %}
                         <option value="{{ item.id }}">{{ item.item_name }} {{ item.item_spec }}</option>
@@ -65,6 +67,10 @@
                     {% endfor %}
                 </select><br>
                 </div>
+                <label for="sn_code_out">SN码:</label>
+                <select name="sn_code" id="sn_code_out" class="select2-sn">  <!-- 添加 SN 码下拉列表 -->
+                    <option value="">请选择SN码</option>
+                </select><br>
                 <button type="submit">提交出库</button>
             </form>
         </div>
@@ -75,6 +81,14 @@
 <script>
 $(document).ready(function() {
     $('.select2-item').select2();
+    $('.select2-sn').select2(); // 初始化 SN 码下拉列表
+
+    // 阻止入库 SN 码输入框回车提交表单
+    document.getElementById('sn_code_in').addEventListener('keydown', function(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+        }
+    });
 });
 
 function loadLocations() {
@@ -94,6 +108,35 @@ function loadLocations() {
                     option.text = location.warehouse_number + '号仓库' + location.shelf_number + '号货架' + location.layer_number + '层';
                     locationSelect.appendChild(option);
                 }
+            } else {
+                console.error('Request failed with status: ' + xhr.status);
+            }
+        };
+        xhr.onerror = function() {
+            console.error('Request failed');
+        };
+        xhr.send();
+    }
+}
+
+function loadSNs() { // 加载 SN 码的函数
+    var item_id = document.getElementById('item_id_out').value;
+    if (item_id) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', '/get_sns?item_id=' + item_id, true); // 新的 URL
+        xhr.onload = function() {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                var sns = JSON.parse(xhr.responseText);
+                var snSelect = document.getElementById('sn_code_out');
+                snSelect.innerHTML = '<option value="">请选择SN码</option>';
+                for (var i = 0; i < sns.length; i++) {
+                    var sn = sns[i];
+                    var option = document.createElement('option');
+                    option.value = sn;
+                    option.text = sn;
+                    snSelect.appendChild(option);
+                }
+                $('.select2-sn').select2(); // 重新初始化 select2，确保更新后的选项也能搜索
             } else {
                 console.error('Request failed with status: ' + xhr.status);
             }

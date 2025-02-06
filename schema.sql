@@ -24,6 +24,7 @@ CREATE TABLE inbound (
     inbound_qty INTEGER NOT NULL,
     inbound_date DATE NOT NULL,
     location_id INTEGER NOT NULL,
+    sn_code TEXT,
     FOREIGN KEY (item_id) REFERENCES items(id),
     FOREIGN KEY (location_id) REFERENCES locations(id)
 );
@@ -36,7 +37,7 @@ CREATE TABLE outbound (
     outbound_purpose TEXT NOT NULL,
     outbound_date DATE NOT NULL,
     location_id INTEGER NOT NULL,
+    sn_code TEXT,
     FOREIGN KEY (item_id) REFERENCES items(id),
     FOREIGN KEY (location_id) REFERENCES locations(id)
 );
-
