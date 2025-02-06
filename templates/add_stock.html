@@ -9,7 +9,7 @@
         <!-- 入库表单 -->
         <div class="form-section flex-item">
             <h3>入库</h3>
-            <form method="post">
+            <form method="post" onsubmit="return handleFormSubmit()">
                 <input type="hidden" name="form_type" value="in">
                 <label for="item_id_in">物品:</label>
                 <select name="item_id" id="item_id_in" class="select2-item" required>
@@ -19,7 +19,7 @@
                     {% endfor %}
                 </select><br>
                 <label for="inbound_qty">入库数量:</label>
-                <input type="number" name="inbound_qty" id="inbound_qty" required><br>
+                <input type="number" name="inbound_qty" id="inbound_qty" required><br>  <!-- 初始状态可编辑 -->
                 <label for="inbound_date">入库日期:</label>
                 <input type="date" name="inbound_date" id="inbound_date" required><br>
                 <label for="warehouse_number_in">仓库号:</label>
@@ -29,7 +29,9 @@
                 <label for="layer_number_in">层数:</label>
                 <input type="number" name="layer_number" id="layer_number_in" required><br>
                 <label for="sn_code_in">SN码:</label>
-                <input type="text" name="sn_code" id="sn_code_in"><br>  <!-- 添加 SN 码输入框 -->
+                <input type="text" id="sn_code_in"><br>  <!-- 移除 name 属性 和 required 属性-->
+                <div id="sn_code_list"></div>  <!-- 用于显示 SN 码悬浮框 -->
+                <input type="hidden" name="sn_codes" id="sn_codes">  <!-- 用于存储 SN 码 -->
                 <button type="submit">提交入库</button>
             </form>
         </div>
@@ -78,16 +80,126 @@
     </div>
 </div>
 
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 <script>
 $(document).ready(function() {
     $('.select2-item').select2();
     $('.select2-sn').select2(); // 初始化 SN 码下拉列表
 
-    // 阻止入库 SN 码输入框回车提交表单
+    var snCodes = [];  // 用于存储 SN 码
+    var inboundQtyInput = document.getElementById('inbound_qty');
+    var itemIdInput = document.getElementById('item_id_in');
+    var snCodeInput = document.getElementById('sn_code_in');
+
+    // 入库 SN 码输入框回车事件
     document.getElementById('sn_code_in').addEventListener('keydown', function(event) {
         if (event.key === 'Enter') {
-            event.preventDefault();
+            event.preventDefault(); // 阻止默认行为
+            var snCode = this.value.trim(); // 获取 SN 码并去除空格
+            if (snCode !== '') {
+                // 检查 SN 码是否已存在
+                checkDuplicateSnCode(snCode);
+            }
         }
+    });
+
+    // 检查 SN 码是否已存在
+    function checkDuplicateSnCode(snCode) {
+        var itemId = itemIdInput.value; // 获取物品 ID
+
+        // 过滤掉 "已损毁" 的 SN 码
+        if (snCode === '已损毁') {
+            addSnCode(snCode); // 直接添加 "已损毁" 的 SN 码
+            return;
+        }
+
+        // 使用 AJAX 检查重复 SN 码
+        $.ajax({
+            url: '/check_duplicate_sn',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                item_id: itemId,
+                sn_code: snCode
+            }),
+            success: function(response) {
+                if (response.is_duplicate) {
+                    alert('SN 码 ' + snCode + ' 已存在于库存中，请检查！');
+                } else {
+                    addSnCode(snCode); // 添加 SN 码
+                }
+            }
+        });
+    }
+
+    // 添加 SN 码到列表
+    function addSnCode(snCode) {
+        if (!snCodes.includes(snCode)) { // 检查是否已存在
+            snCodes.push(snCode); // 添加到数组
+            updateSnCodeList(); // 更新 SN 码列表
+            document.getElementById('sn_code_in').value = ''; // 清空输入框
+            // 禁用入库数量输入框
+            inboundQtyInput.readOnly = true;
+            updateInboundQty(); // 更新入库数量
+        } else {
+            alert('SN码已存在于当前列表中！');
+        }
+    }
+
+    // 删除 SN 码
+    function deleteSnCode(snCode) {
+        snCodes = snCodes.filter(function(item) {
+            return item !== snCode;
+        });
+        updateSnCodeList(); // 更新 SN 码列表
+        updateInboundQty(); // 更新入库数量
+
+        // 如果 SN 码列表为空，则允许手动输入入库数量
+        if (snCodes.length === 0) {
+            inboundQtyInput.readOnly = false;
+        }
+    }
+
+    // 更新 SN 码列表
+    function updateSnCodeList() {
+        var snCodeList = document.getElementById('sn_code_list');
+        snCodeList.innerHTML = ''; // 清空列表
+
+        snCodes.forEach(function(snCode) {
+            var snCodeItem = document.createElement('div');
+            snCodeItem.classList.add('sn-code-item');
+            snCodeItem.textContent = snCode;
+
+            var deleteButton = document.createElement('button');
+            deleteButton.classList.add('delete-button');
+            deleteButton.textContent = 'x';
+            deleteButton.onclick = function() {
+                deleteSnCode(snCode);
+            };
+
+            snCodeItem.appendChild(deleteButton);
+            snCodeList.appendChild(snCodeItem);
+        });
+
+        // 将 SN 码数组存储到隐藏输入框中
+        document.getElementById('sn_codes').value = JSON.stringify(snCodes);
+    }
+
+    // 更新入库数量
+    function updateInboundQty() {
+        if (snCodes.length === 0) {
+            // 如果没有 SN 码，则不更新入库数量
+            return;
+        }
+        document.getElementById('inbound_qty').value = snCodes.length;
+    }
+
+    // 提交表单前更新隐藏输入框
+    document.querySelector('form').addEventListener('submit', function() {
+        document.getElementById('sn_codes').value = JSON.stringify(snCodes);
     });
 });
 
@@ -147,6 +259,10 @@ function loadSNs() { // 加载 SN 码的函数
         xhr.send();
     }
 }
+
+function handleFormSubmit() {
+    return true; // 允许表单正常提交
+}
 </script>
 
 <style>
@@ -183,6 +299,30 @@ function loadSNs() { // 加载 SN 码的函数
             width: 100%;         /* 表单元素占满宽度 */
             margin-bottom: 8px;  /* 增加移动端操作间距 */
         }
+    }
+
+    /* SN 码悬浮框样式 */
+    .sn-code-item {
+        display: inline-block;
+        padding: 5px 10px;
+        margin: 5px;
+        background-color: #eee;
+        border-radius: 5px;
+        position: relative;
+    }
+
+    /* 删除按钮样式 */
+    .sn-code-item .delete-button {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background-color: #f00;
+        color: #fff;
+        border: none;
+        cursor: pointer;
     }
 </style>
 {% endblock %}

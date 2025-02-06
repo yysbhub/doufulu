@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 import sqlite3
+import json  # 导入 json 模块
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # 用于 flash 消息
@@ -62,10 +63,10 @@ def items():
 @app.route('/add_stock', methods=['GET', 'POST'])
 def add_stock():
     conn = get_db_connection()
-    
+
     # 获取所有物品（用于入库）
     all_items = conn.execute('SELECT * FROM items').fetchall()
-    
+
     # 获取有库存的物品（用于出库）
     stocked_items = conn.execute('''
         SELECT items.*
@@ -81,7 +82,7 @@ def add_stock():
             WHERE stock > 0
         )
     ''').fetchall()
-    
+
     # 动态加载位置（用于出库）
     locations = []
     item_id = request.args.get('item_id')  # 获取物品ID
@@ -101,24 +102,24 @@ def add_stock():
                 )
             )
         ''', (item_id, item_id)).fetchall()
-    
+
     conn.close()
-    
+
     if request.method == 'POST':
         form_type = request.form.get('form_type')
         if form_type == 'in':
             # 处理入库逻辑
             item_id = request.form['item_id']
-            inbound_qty = request.form['inbound_qty']
+            inbound_qty = int(request.form['inbound_qty'])  # 获取手动输入的入库数量
             inbound_date = request.form['inbound_date']
             warehouse_number = request.form['warehouse_number']
             shelf_number = request.form['shelf_number']
             layer_number = request.form['layer_number']
-            sn_code = request.form.get('sn_code')  # 获取 SN 码
+            sn_codes_json = request.form['sn_codes']  # 获取 SN 码 JSON 字符串
+            sn_codes = json.loads(sn_codes_json)  # 解析 SN 码数组
 
-            
             conn = get_db_connection()
-            
+
             # 检查位置是否存在，如果不存在则创建
             location = conn.execute('SELECT id FROM locations WHERE warehouse_number = ? AND shelf_number = ? AND layer_number = ?',
                                     (warehouse_number, shelf_number, layer_number)).fetchone()
@@ -129,13 +130,34 @@ def add_stock():
                 location_id = conn.execute('SELECT last_insert_rowid()').fetchone()[0]
             else:
                 location_id = location['id']
-            
-            conn.execute('INSERT INTO inbound (item_id, inbound_qty, inbound_date, location_id, sn_code) VALUES (?, ?, ?, ?, ?)',  # 插入 SN 码
-                         (item_id, inbound_qty, inbound_date, location_id, sn_code))
+
+            # 如果 SN 码列表为空，则插入一条记录，数量为手动输入的数量，SN 码为 None
+            if not sn_codes:
+                conn.execute('INSERT INTO inbound (item_id, inbound_qty, inbound_date, location_id, sn_code) VALUES (?, ?, ?, ?, ?)',
+                             (item_id, inbound_qty, inbound_date, location_id, None))
+            else:
+                # 处理 "已损毁" SN 码
+                damaged_count = sn_codes.count('已损毁')
+                if '已损毁' in sn_codes:
+                    sn_codes = [code for code in sn_codes if code != '已损毁']
+
+                # 插入 "已损毁" 记录
+                if damaged_count > 0:
+                    conn.execute('INSERT INTO inbound (item_id, inbound_qty, inbound_date, location_id, sn_code) VALUES (?, ?, ?, ?, ?)',
+                                 (item_id, damaged_count, inbound_date, location_id, '已损毁'))
+
+                # 循环插入每个 SN 码对应的入库记录
+                for sn_code in sn_codes:
+                    # 允许 sn_code 为空
+                    if not sn_code:
+                        sn_code = None  # 或者 sn_code = ""
+                    conn.execute('INSERT INTO inbound (item_id, inbound_qty, inbound_date, location_id, sn_code) VALUES (?, ?, ?, ?, ?)',
+                                 (item_id, 1, inbound_date, location_id, sn_code))  # 每个 SN 码对应一个入库记录，数量为 1
+
             conn.commit()
             conn.close()
             return redirect(url_for('inbound_records'))
-        
+
         elif form_type == 'out':
             # 处理出库逻辑
             item_id = request.form['item_id']
@@ -144,41 +166,40 @@ def add_stock():
             outbound_purpose = request.form['outbound_purpose']
             outbound_date = request.form['outbound_date']
             sn_code = request.form.get('sn_code')  # 获取 SN 码
-            
+
             try:
                 location_id = request.form['location_id']
             except KeyError:
                 flash('请选择出库位置！', 'error')
                 return redirect(url_for('add_stock'))
-            
+
             conn = get_db_connection()
 
             # 获取当前库存数量
             stock_info = conn.execute('''
-                SELECT 
+                SELECT
                     IFNULL((SELECT SUM(COALESCE(inbound_qty, 0)) FROM inbound WHERE item_id = ?), 0) -
                     IFNULL((SELECT SUM(COALESCE(outbound_qty, 0)) FROM outbound WHERE item_id = ?), 0) AS stock
             ''', (item_id, item_id)).fetchone()
-            
+
             if stock_info is None or stock_info['stock'] is None:
                 flash('该物品无库存！', 'error')
                 conn.close()
                 return redirect(url_for('add_stock'))
-            
+
             current_stock = stock_info['stock']
 
             # 限制出库数量
             #if outbound_qty > current_stock:
-                #flash(f'出库数量超过库存！已将出库数量限制为 {current_stock}', 'warning')  # 提示信息
-                #outbound_qty = current_stock
+            #flash(f'出库数量超过库存！已将出库数量限制为 {current_stock}', 'warning')  # 提示信息
+            #outbound_qty = current_stock
 
-            
             conn.execute('INSERT INTO outbound (item_id, outbound_qty, outbound_person, outbound_purpose, outbound_date, location_id, sn_code) VALUES (?, ?, ?, ?, ?, ?, ?)',  # 插入 SN 码
-                         (item_id, outbound_qty, outbound_person, outbound_purpose, outbound_date, location_id, sn_code))
+                         (item_id, outbound_qty, outbound_person,outbound_purpose,outbound_date, location_id, sn_code))
             conn.commit()
             conn.close()
             return redirect(url_for('outbound_records'))
-    
+
     return render_template('add_stock.html', all_items=all_items, stocked_items=stocked_items, locations=locations, selected_item_id=item_id)
 
 @app.route('/add_stock_in', methods=['POST'])
@@ -271,10 +292,27 @@ def get_locations():
 def get_sns():
     item_id = request.args.get('item_id')
     conn = get_db_connection()
+    # 修改查询: 确保只返回特定 item_id 的非空 SN 码
     sns = [row[0] for row in conn.execute('SELECT sn_code FROM inbound WHERE item_id = ? AND sn_code IS NOT NULL', (item_id,)).fetchall()]
     conn.close()
     return jsonify(sns)
 
+@app.route('/check_duplicate_sn', methods=['POST'])
+def check_duplicate_sn():
+    data = request.get_json()
+    item_id = data['item_id']
+    sn_code = data['sn_code']
+
+    conn = get_db_connection()
+    existing_sn = conn.execute('''
+        SELECT sn_code FROM inbound
+        WHERE item_id = ? AND sn_code = ?
+        AND NOT EXISTS (SELECT 1 FROM outbound WHERE outbound.sn_code = inbound.sn_code)
+    ''', (item_id, sn_code)).fetchone()
+    conn.close()
+
+    is_duplicate = existing_sn is not None
+    return jsonify({'is_duplicate': is_duplicate})
 
 @app.route('/stock_report')
 def stock_report():
