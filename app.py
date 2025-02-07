@@ -316,6 +316,9 @@ def check_duplicate_sn():
 
 @app.route('/stock_report')
 def stock_report():
+    table_select = request.args.get('table_select', 'inventory')  # 获取选择的表单，默认为 'inventory'
+    page = request.args.get('page', 0, type=int)  # 获取页码，默认为 0
+
     conn = get_db_connection()
     inventory = conn.execute('''
         SELECT
@@ -352,8 +355,9 @@ def stock_report():
         JOIN items ON outbound.item_id = items.id
         JOIN locations ON outbound.location_id = locations.id
     ''').fetchall()
+    items = conn.execute('SELECT * FROM items').fetchall()
     conn.close()
-    return render_template('stock_report.html', inventory=inventory, inbound_records=inbound_records, outbound_records=outbound_records)
+    return render_template('stock_report.html', inventory=inventory, inbound_records=inbound_records, outbound_records=outbound_records, items=items, table_select=table_select, page=page)
 
 
 @app.route('/inbound_records')
@@ -375,7 +379,7 @@ def delete_inbound_record(id):
     conn.execute('DELETE FROM inbound WHERE id = ?', (id,))
     conn.commit()
     conn.close()
-    return redirect(url_for('stock_report'))
+    return redirect(url_for('stock_report', table_select='inbound'))
 
 @app.route('/delete_outbound_record/<int:id>', methods=['POST'])
 def delete_outbound_record(id):
@@ -383,7 +387,15 @@ def delete_outbound_record(id):
     conn.execute('DELETE FROM outbound WHERE id = ?', (id,))
     conn.commit()
     conn.close()
-    return redirect(url_for('stock_report'))
+    return redirect(url_for('stock_report', table_select='outbound'))
+
+@app.route('/delete_item/<int:id>', methods=['POST'])
+def delete_item(id):
+    conn = get_db_connection()
+    conn.execute('DELETE FROM items WHERE id = ?', (id,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('stock_report', table_select='items'))
 
 if __name__ == '__main__':
     #init_db()

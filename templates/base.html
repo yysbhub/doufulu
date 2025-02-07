@@ -13,7 +13,7 @@
 <body>
     <nav>
         <a href="{{ url_for('index') }}" {% if request.endpoint == 'index' %}class="active"{% endif %}>主页</a> |
-        <a href="{{ url_for('items') }}" {% if request.endpoint == 'items' %}class="active"{% endif %}>物品列表</a> |
+        <!--<a href="{{ url_for('items') }}" {% if request.endpoint == 'items' %}class="active"{% endif %}>物品列表</a> |-->
         <a href="{{ url_for('add_item') }}" {% if request.endpoint == 'add_item' %}class="active"{% endif %}>添加物品</a> |
         <a href="{{ url_for('add_stock') }}" {% if request.endpoint == 'add_stock' %}class="active"{% endif %}>出入库管理</a> |
         <a href="{{ url_for('stock_report') }}" {% if request.endpoint == 'stock_report' %}class="active"{% endif %}>库存统计</a>
