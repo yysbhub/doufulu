@@ -94,16 +94,19 @@ $(document).ready(function() {
     var itemIdInput = document.getElementById('item_id_in');
     var snCodeInput = document.getElementById('sn_code_in');
 
-    // 入库 SN 码输入框回车事件
-    document.getElementById('sn_code_in').addEventListener('keydown', function(event) {
-        if (event.key === 'Enter') {
-            event.preventDefault(); // 阻止默认行为
-            var snCode = this.value.trim(); // 获取 SN 码并去除空格
+    // 入库 SN 码输入框粘贴事件
+    document.getElementById('sn_code_in').addEventListener('paste', function(event) {
+        event.preventDefault(); // 阻止默认行为
+        var pastedText = (event.clipboardData || window.clipboardData).getData('text'); // 获取粘贴的文本
+        var snCodeLines = pastedText.split(/\r?\n/); // 按行分割 SN 码
+
+        // 循环处理每一行 SN 码
+        snCodeLines.forEach(function(snCode) {
+            snCode = snCode.trim(); // 去除空格
             if (snCode !== '') {
-                // 检查 SN 码是否已存在
-                checkDuplicateSnCode(snCode);
+                checkDuplicateSnCode(snCode); // 检查重复 SN 码
             }
-        }
+        });
     });
 
     // 检查 SN 码是否已存在
