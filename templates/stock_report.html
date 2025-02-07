@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <div class="content">
         <div class="report-container">
             <!-- 显示表单选择 -->
@@ -17,7 +18,10 @@
             <!-- 库存统计 -->
             {% if table_select == 'inventory' or not table_select %}
             <div class="report-section">
-                <h3>库存统计</h3>
+                <div class="report-header">
+                    <h3>库存统计</h3>
+                    <button class="export-button" onclick="exportTableToCSV('inventoryTable', 'inventory.csv')">导出CSV</button>
+                </div>
                 <div class="table-container">
                     <table id="inventoryTable">
                         <thead>
@@ -39,7 +43,6 @@
                             {% endfor %}
                         </tbody>
                     </table>
-                    <button class="export-button" onclick="exportTableToCSV('inventoryTable', 'inventory.csv')">导出CSV</button>
                 </div>
             </div>
             {% endif %}
@@ -47,7 +50,10 @@
             <!-- 入库记录 -->
             {% if table_select == 'inbound' %}
             <div class="report-section">
-                <h3>入库记录</h3>
+                <div class="report-header">
+                    <h3>入库记录</h3>
+                    <button class="export-button" onclick="exportTableToCSV('inboundTable', 'inbound.csv')">导出CSV</button>
+                </div>
                 <div class="table-container">
                     <table id="inboundTable">
                         <thead>
@@ -57,49 +63,28 @@
                                 <th>入库数量</th>
                                 <th>入库日期</th>
                                 <th>位置</th>
-                                <th>SN码</th>  <!-- 添加 SN 码列 -->
-                                <th>操作</th> <!-- 添加操作列 -->
+                                <th>SN码</th>
+                                <th>操作</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% if inbound_records %}
-                                {% set start = page * 20 %}
-                                {% set end = (page + 1) * 20 %}
-                                {% for i in range(start, end) %}
-                                    {% if i < inbound_records|length %}
-                                        {% set record = inbound_records[i] %}
-                                        <tr>
-                                            <td>{{ record.item_name }}</td>
-                                            <td>{{ record.item_spec }}</td>
-                                            <td>{{ record.inbound_qty }}</td>
-                                            <td>{{ record.inbound_date }}</td>
-                                            <td>{{ record.warehouse_number }}号仓库{{ record.shelf_number }}号货架{{ record.layer_number }}层</td>
-                                            <td>{{ record.sn_code }}</td>  <!-- 添加 SN 码数据 -->
-                                            <td>
-                                                <form method="post" action="{{ url_for('delete_inbound_record', id=record.id) }}" onsubmit="return confirm('确定要删除此入库记录吗？');">
-                                                    <button type="submit" class="delete-button">删除</button>
-                                                </form>
-                                            </td>
-                                        </tr>
-                                    {% endif %}
-                                {% endfor %}
-                            {% else %}
-                                <tr>
-                                    <td colspan="7">没有入库记录。</td>
-                                </tr>
-                            {% endif %}
+                            {% for record in inbound_records %}
+                            <tr>
+                                <td>{{ record.item_name }}</td>
+                                <td>{{ record.item_spec }}</td>
+                                <td>{{ record.inbound_qty }}</td>
+                                <td>{{ record.inbound_date }}</td>
+                                <td>{{ record.warehouse_number }}号仓库{{ record.shelf_number }}号货架{{ record.layer_number }}层</td>
+                                <td>{{ record.sn_code }}</td>
+                                <td class="delete-cell">
+                                    <form class="delete-form" method="post" action="{{ url_for('delete_inbound_record', id=record.id) }}" onsubmit="return confirmDelete(this)">
+                                        <button type="submit" class="delete-button"><i class="fas fa-trash-alt"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
                         </tbody>
                     </table>
-                    <button class="export-button" onclick="exportTableToCSV('inboundTable', 'inbound.csv')">导出CSV</button>
-                    <!-- 分页 -->
-                    <div class="pagination">
-                        {% if page > 0 %}
-                            <a href="?table_select=inbound&page={{ page - 1 }}">上一页</a>
-                        {% endif %}
-                        {% if inbound_records|length > (page + 1) * 20 %}
-                            <a href="?table_select=inbound&page={{ page + 1 }}">下一页</a>
-                        {% endif %}
-                    </div>
                 </div>
             </div>
             {% endif %}
@@ -107,7 +92,10 @@
             <!-- 出库记录 -->
             {% if table_select == 'outbound' %}
             <div class="report-section">
-                <h3>出库记录</h3>
+                <div class="report-header">
+                    <h3>出库记录</h3>
+                    <button class="export-button" onclick="exportTableToCSV('outboundTable', 'outbound.csv')">导出CSV</button>
+                </div>
                 <div class="table-container">
                     <table id="outboundTable">
                         <thead>
@@ -119,51 +107,30 @@
                                 <th>出库用途</th>
                                 <th>出库日期</th>
                                 <th>位置</th>
-                                <th>SN码</th>  <!-- 添加 SN 码列 -->
-                                <th>操作</th> <!-- 添加操作列 -->
+                                <th>SN码</th>
+                                <th>操作</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% if outbound_records %}
-                                {% set start = page * 20 %}
-                                {% set end = (page + 1) * 20 %}
-                                {% for i in range(start, end) %}
-                                    {% if i < outbound_records|length %}
-                                        {% set record = outbound_records[i] %}
-                                        <tr>
-                                            <td>{{ record.item_name }}</td>
-                                            <td>{{ record.item_spec }}</td>
-                                            <td>{{ record.outbound_qty }}</td>
-                                            <td>{{ record.outbound_person }}</td>
-                                            <td>{{ record.outbound_purpose }}</td>
-                                            <td>{{ record.outbound_date }}</td>
-                                            <td>{{ record.warehouse_number }}号仓库{{ record.shelf_number }}号货架{{ record.layer_number }}层</td>
-                                            <td>{{ record.sn_code }}</td>  <!-- 添加 SN 码数据 -->
-                                            <td>
-                                                <form method="post" action="{{ url_for('delete_outbound_record', id=record.id) }}" onsubmit="return confirm('确定要删除此出库记录吗？');">
-                                                    <button type="submit" class="delete-button">删除</button>
-                                                </form>
-                                            </td>
-                                        </tr>
-                                    {% endif %}
-                                {% endfor %}
-                            {% else %}
-                                <tr>
-                                    <td colspan="9">没有出库记录。</td>
-                                </tr>
-                            {% endif %}
+                            {% for record in outbound_records %}
+                            <tr>
+                                <td>{{ record.item_name }}</td>
+                                <td>{{ record.item_spec }}</td>
+                                <td>{{ record.outbound_qty }}</td>
+                                <td>{{ record.outbound_person }}</td>
+                                <td>{{ record.outbound_purpose }}</td>
+                                <td>{{ record.outbound_date }}</td>
+                                <td>{{ record.warehouse_number }}号仓库{{ record.shelf_number }}号货架{{ record.layer_number }}层</td>
+                                <td>{{ record.sn_code }}</td>
+                                <td class="delete-cell">
+                                    <form class="delete-form" method="post" action="{{ url_for('delete_outbound_record', id=record.id) }}" onsubmit="return confirmDelete(this)">
+                                        <button type="submit" class="delete-button"><i class="fas fa-trash-alt"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
                         </tbody>
                     </table>
-                    <button class="export-button" onclick="exportTableToCSV('outboundTable', 'outbound.csv')">导出CSV</button>
-                    <!-- 分页 -->
-                    <div class="pagination">
-                        {% if page > 0 %}
-                            <a href="?table_select=outbound&page={{ page - 1 }}">上一页</a>
-                        {% endif %}
-                        {% if outbound_records|length > (page + 1) * 20 %}
-                            <a href="?table_select=outbound&page={{ page + 1 }}">下一页</a>
-                        {% endif %}
-                    </div>
                 </div>
             </div>
             {% endif %}
@@ -171,7 +138,10 @@
             <!-- 物品列表 -->
             {% if table_select == 'items' %}
             <div class="report-section">
-                <h3>物品列表</h3>
+                <div class="report-header">
+                    <h3>物品列表</h3>
+                    <button class="export-button" onclick="exportTableToCSV('itemsTable', 'items.csv')">导出CSV</button>
+                </div>
                 <div class="table-container">
                     <table id="itemsTable">
                         <thead>
@@ -183,48 +153,78 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% if items %}
-                                {% set start = page * 20 %}
-                                {% set end = (page + 1) * 20 %}
-                                {% for i in range(start, end) %}
-                                    {% if i < items|length %}
-                                        {% set item = items[i] %}
-                                        <tr>
-                                            <td>{{ item.item_code }}</td>
-                                            <td>{{ item.item_name }}</td>
-                                            <td>{{ item.item_spec }}</td>
-                                            <td>
-                                                <form method="post" action="{{ url_for('delete_item', id=item.id) }}" onsubmit="return confirm('确定要删除此物品吗？');">
-                                                    <button type="submit" class="delete-button">删除</button>
-                                                </form>
-                                            </td>
-                                        </tr>
-                                    {% endif %}
-                                {% endfor %}
-                            {% else %}
-                                <tr>
-                                    <td colspan="4">没有物品数据。</td>
-                                </tr>
-                            {% endif %}
+                            {% for item in items %}
+                            <tr>
+                                <td>{{ item.item_code }}</td>
+                                <td>{{ item.item_name }}</td>
+                                <td>{{ item.item_spec }}</td>
+                                <td class="delete-cell">
+                                    <form class="delete-form" method="post" action="{{ url_for('delete_item', id=item.id) }}" onsubmit="return confirmDelete(this)">
+                                        <button type="submit" class="delete-button"><i class="fas fa-trash-alt"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
                         </tbody>
                     </table>
-                    <button class="export-button" onclick="exportTableToCSV('itemsTable', 'items.csv')">导出CSV</button>
-                    <!-- 分页 -->
-                    <div class="pagination">
-                        {% if page > 0 %}
-                            <a href="?table_select=items&page={{ page - 1 }}">上一页</a>
-                        {% endif %}
-                        {% if items|length > (page + 1) * 20 %}
-                            <a href="?table_select=items&page={{ page + 1 }}">下一页</a>
-                        {% endif %}
-                    </div>
                 </div>
             </div>
             {% endif %}
         </div>
     </div>
 
+    <!-- 模态框 -->
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <p id="modal-message"></p>
+            <div class="modal-buttons">
+                <button id="confirm-button">确定</button>
+                <button id="cancel-button">取消</button>
+            </div>
+        </div>
+    </div>
+
+
+
     <script>
+        // 获取模态框元素
+        var modal = document.getElementById("myModal");
+        var modalMessage = document.getElementById("modal-message");
+        var confirmButton = document.getElementById("confirm-button");
+        var cancelButton = document.getElementById("cancel-button");
+        var formToSubmit = null;
+
+        // 确认删除函数
+        function confirmDelete(form) {
+            event.preventDefault();
+            modalMessage.textContent = "确定要删除此记录吗？";
+            modal.style.display = "block";
+            formToSubmit = form;
+            return false;
+        }
+
+        // 确定按钮点击事件
+        confirmButton.onclick = function() {
+            modal.style.display = "none";
+            if (formToSubmit) {
+                formToSubmit.submit();
+            }
+        }
+
+        // 取消按钮点击事件
+        cancelButton.onclick = function() {
+            modal.style.display = "none";
+            formToSubmit = null;
+        }
+
+        // 点击模态框外部关闭模态框
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+                formToSubmit = null;
+            }
+        }
+
         function exportTableToCSV(tableId, filename) {
             var csv = [];
             var table = document.getElementById(tableId);
@@ -234,7 +234,10 @@
                 var row = [];
                 var cols = rows[i].querySelectorAll("td, th");
 
-                for (var j = 0; j < cols.length; j++) {
+                // 忽略最后一列
+                var colsLength = cols.length - 1;
+
+                for (var j = 0; j < colsLength; j++) {
                     // 清理数据，移除逗号和换行符，并用双引号包裹
                     let data = cols[j].textContent.replace(/,/g, "，").replace(/(\r\n|\n|\r)/gm, "");
                     data = '"' + data + '"';
@@ -277,42 +280,4 @@
             downloadLink.click();
         }
     </script>
-
-    <style>
-        .delete-button {
-            background-color: #f44336;
-            color: white;
-            padding: 5px 10px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .delete-button:hover {
-            background-color: #da190b;
-        }
-
-        .table-container {
-            max-height: 600px; /* 20 rows * 30px height */
-            overflow-y: auto;
-        }
-        .pagination {
-            margin-top: 10px;
-            text-align: center;
-        }
-
-        .pagination a {
-            display: inline-block;
-            padding: 5px 10px;
-            margin: 0 5px;
-            border: 1px solid #ccc;
-            text-decoration: none;
-            color: #333;
-        }
-
-        .pagination a:hover {
-            background-color: #f0f0f0;
-        }
-    </style>
-
 {% endblock %}

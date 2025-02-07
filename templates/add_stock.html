@@ -9,7 +9,7 @@
         <!-- 入库表单 -->
         <div class="form-section flex-item">
             <h3>入库</h3>
-            <form method="post" onsubmit="return handleFormSubmit()">
+            <form id="inbound-form" method="post">
                 <input type="hidden" name="form_type" value="in">
                 <label for="item_id_in">物品:</label>
                 <select name="item_id" id="item_id_in" class="select2-item" required>
@@ -39,7 +39,7 @@
         <!-- 出库表单 -->
         <div class="form-section flex-item">
             <h3>出库</h3>
-            <form method="post">
+            <form id="outbound-form" method="post">
                 <input type="hidden" name="form_type" value="out">
                 <label for="item_id_out">物品:</label>
                 <select name="item_id" id="item_id_out" class="select2-item" required onchange="loadLocations(); loadSNs()">  <!-- 修改 onchange 事件 -->
@@ -80,6 +80,70 @@
     </div>
 </div>
 
+<!-- 自定义弹窗 -->
+<div id="custom-alert" class="custom-alert">
+    <div class="alert-content">
+        <span class="close-button" onclick="closeAlert()">&times;</span>
+        <p id="alert-message"></p>
+        <button class="ok-button" onclick="closeAlert()">确定</button>
+    </div>
+</div>
+
+<style>
+    /* 弹窗样式 */
+    .custom-alert {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5); /* 半透明背景 */
+        z-index: 1000; /* 确保在最上层 */
+    }
+
+    .alert-content {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        text-align: center;
+        width: 80%;
+        max-width: 400px;
+    }
+
+    .close-button {
+        position: absolute;
+        top: 5px;
+        right: 10px;
+        font-size: 20px;
+        cursor: pointer;
+        color: #aaa;
+    }
+
+    .close-button:hover {
+        color: #000;
+    }
+
+    .ok-button {
+        background-color: #4CAF50;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-top: 15px;
+    }
+
+    .ok-button:hover {
+        background-color: #3e8e41;
+    }
+</style>
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
@@ -98,16 +162,31 @@ $(document).ready(function() {
     document.getElementById('sn_code_in').addEventListener('paste', function(event) {
         event.preventDefault(); // 阻止默认行为
         var pastedText = (event.clipboardData || window.clipboardData).getData('text'); // 获取粘贴的文本
-        var snCodeLines = pastedText.split(/\r?\n/); // 按行分割 SN 码
+        processSnCodes(pastedText); // 处理 SN 码
+    });
 
-        // 循环处理每一行 SN 码
+    // 入库 SN 码输入框回车事件
+    document.getElementById('sn_code_in').addEventListener('keydown', function(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault(); // 阻止默认行为
+            var snCode = snCodeInput.value.trim(); // 获取输入的 SN 码
+            if (snCode !== '') {
+                checkDuplicateSnCode(snCode); // 检查重复 SN 码
+                snCodeInput.value = ''; // 清空输入框
+            }
+        }
+    });
+
+    // 处理 SN 码
+    function processSnCodes(text) {
+        var snCodeLines = text.split(/\r?\n|\s+/); // 按行或空格分割 SN 码
         snCodeLines.forEach(function(snCode) {
             snCode = snCode.trim(); // 去除空格
             if (snCode !== '') {
                 checkDuplicateSnCode(snCode); // 检查重复 SN 码
             }
         });
-    });
+    }
 
     // 检查 SN 码是否已存在
     function checkDuplicateSnCode(snCode) {
@@ -148,7 +227,7 @@ $(document).ready(function() {
             inboundQtyInput.readOnly = true;
             updateInboundQty(); // 更新入库数量
         } else {
-            alert('SN码已存在于当前列表中！');
+            alert('存在重复的SN码，请检查！');
         }
     }
 
@@ -200,9 +279,80 @@ $(document).ready(function() {
         document.getElementById('inbound_qty').value = snCodes.length;
     }
 
-    // 提交表单前更新隐藏输入框
-    document.querySelector('form').addEventListener('submit', function() {
-        document.getElementById('sn_codes').value = JSON.stringify(snCodes);
+    // 入库表单提交
+    $('#inbound-form').submit(function(event) {
+        event.preventDefault(); // 阻止表单的默认提交行为
+
+        // 使用 FormData 对象获取表单数据
+        var formData = new FormData(this);
+
+        // 如果 SN 码列表为空，则将 sn_codes 设置为 "[]"
+        if (snCodes.length === 0) {
+            formData.set('sn_codes', '[]'); // 使用 FormData.set()
+        }
+
+        // 发送 POST 请求到 /add_stock_in_api 路由
+        $.ajax({
+            url: '/add_stock_in_api',
+            type: 'POST',
+            data: formData,
+            contentType: false,
+            processData: false,
+            dataType: 'json', // 明确指定返回的数据类型为 JSON
+            success: function(data) {
+                if (data.status === 'success') {
+                    // 成功提交，显示自定义弹窗
+                    showAlert(data.message); // 使用服务器返回的消息
+                    $('#inbound-form')[0].reset(); // 重置表单
+                    snCodes = []; // 清空 SN 码列表
+                    updateSnCodeList(); // 更新 SN 码列表
+                    inboundQtyInput.readOnly = false; // 允许手动输入入库数量
+                } else {
+                    // 提交失败，显示自定义弹窗
+                    showAlert(data.message); // 使用服务器返回的消息
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', error);
+                console.error('Status:', status);
+                console.error('Response:', xhr.responseText); // 打印服务器返回的完整响应
+                showAlert('发生错误，请检查网络连接！');
+            }
+        });
+    });
+
+    // 出库表单提交
+    $('#outbound-form').submit(function(event) {
+        event.preventDefault(); // 阻止表单的默认提交行为
+
+        // 使用 FormData 对象获取表单数据
+        var formData = new FormData(this);
+
+        // 发送 POST 请求到 /add_stock_out_api 路由
+        $.ajax({
+            url: '/add_stock_out_api',
+            type: 'POST',
+            data: formData,
+            contentType: false,
+            processData: false,
+            dataType: 'json', // 明确指定返回的数据类型为 JSON
+            success: function(data) {
+                if (data.status === 'success') {
+                    // 成功提交，显示自定义弹窗
+                    showAlert(data.message); // 使用服务器返回的消息
+                    $('#outbound-form')[0].reset(); // 重置表单
+                } else {
+                    // 提交失败，显示自定义弹窗
+                    showAlert(data.message); // 使用服务器返回的消息
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', error);
+                console.error('Status:', status);
+                console.error('Response:', xhr.responseText); // 打印服务器返回的完整响应
+                showAlert('发生错误，请检查网络连接！');
+            }
+        });
     });
 });
 
@@ -263,73 +413,17 @@ function loadSNs() { // 加载 SN 码的函数
     }
 }
 
-function handleFormSubmit() {
-    return true; // 允许表单正常提交
+// 显示自定义弹窗
+function showAlert(message) {
+    document.getElementById('alert-message').textContent = message;
+    document.getElementById('custom-alert').style.display = 'block';
 }
+
+// 关闭自定义弹窗
+function closeAlert() {
+    document.getElementById('custom-alert').style.display = 'none';
+}
+
 </script>
 
-<style>
-    /* 响应式布局核心代码 */
-    .flex-container {
-        display: flex;
-        flex-direction: column;  /* 移动端默认垂直排列 */
-        gap: 20px;              /* 元素间距 */
-    }
-
-    .flex-item {
-        width: 100%;            /* 移动端占满宽度 */
-        padding: 15px;
-        background: #f5f5f5;
-        border-radius: 8px;
-        box-sizing: border-box; /* 防止padding影响宽度 */
-    }
-
-    /* 电脑端布局（768px以上） */
-    @media (min-width: 768px) {
-        .flex-container {
-            flex-direction: row;   /* 横向排列 */
-            justify-content: space-between;
-        }
-
-        .flex-item {
-            width: calc(50% - 10px); /* 考虑间隙的精确计算 */
-        }
-    }
-
-    /* 移动端优化 */
-    @media (max-width: 480px) {
-        input, select, button {
-            width: 100%;         /* 表单元素占满宽度 */
-            margin-bottom: 8px;  /* 增加移动端操作间距 */
-        }
-    }
-
-    /* SN 码悬浮框样式 */
-    .sn-code-item {
-        display: inline-block;
-        padding: 5px 10px;
-        margin: 5px;
-        background-color: #eee;
-        border-radius: 5px;
-        position: relative;
-    }
-
-    /* 删除按钮样式 */
-    .sn-code-item .delete-button {
-        position: absolute;
-        top: -6px; /* 调整位置 */
-        right: -6px; /* 调整位置 */
-        width: 12px; /* 缩小宽度 */
-        height: 12px; /* 缩小高度 */
-        border-radius: 50%; /* 保持圆形 */
-        background-color: #f00;
-        color: #fff;
-        border: none;
-        cursor: pointer;
-        font-size: 8px; /* 缩小字体 */
-        line-height: 12px; /* 调整行高，使文字居中 */
-        text-align: center; /* 文字居中 */
-        padding: 0; /* 移除内边距 */
-    }
-</style>
 {% endblock %}
