@@ -25,7 +25,7 @@
                 <label for="warehouse_number_in">仓库号:</label>
                 <input type="number" name="warehouse_number" id="warehouse_number_in" required><br>
                 <label for="shelf_number_in">货架号:</label>
-                <input type="number" name="shelf_number" id="shelf_number_in" required><br>
+                <input type="text" name="shelf_number" id="shelf_number_in" required><br>
                 <label for="layer_number_in">层数:</label>
                 <input type="number" name="layer_number" id="layer_number_in" required><br>
                 <label for="sn_code_in">SN码:</label>
@@ -314,15 +314,19 @@ function handleFormSubmit() {
     /* 删除按钮样式 */
     .sn-code-item .delete-button {
         position: absolute;
-        top: -5px;
-        right: -5px;
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
+        top: -6px; /* 调整位置 */
+        right: -6px; /* 调整位置 */
+        width: 12px; /* 缩小宽度 */
+        height: 12px; /* 缩小高度 */
+        border-radius: 50%; /* 保持圆形 */
         background-color: #f00;
         color: #fff;
         border: none;
         cursor: pointer;
+        font-size: 8px; /* 缩小字体 */
+        line-height: 12px; /* 调整行高，使文字居中 */
+        text-align: center; /* 文字居中 */
+        padding: 0; /* 移除内边距 */
     }
 </style>
 {% endblock %}

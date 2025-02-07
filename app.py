@@ -369,6 +369,21 @@ def outbound_records():
 def inventory():
     return redirect(url_for('stock_report'))
 
+@app.route('/delete_inbound_record/<int:id>', methods=['POST'])
+def delete_inbound_record(id):
+    conn = get_db_connection()
+    conn.execute('DELETE FROM inbound WHERE id = ?', (id,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('stock_report'))
+
+@app.route('/delete_outbound_record/<int:id>', methods=['POST'])
+def delete_outbound_record(id):
+    conn = get_db_connection()
+    conn.execute('DELETE FROM outbound WHERE id = ?', (id,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('stock_report'))
 
 if __name__ == '__main__':
     #init_db()

@@ -45,10 +45,11 @@
                                 <th>入库日期</th>
                                 <th>位置</th>
                                 <th>SN码</th>  <!-- 添加 SN 码列 -->
+                                <th>操作</th> <!-- 添加操作列 -->
                             </tr>
                         </thead>
                         <tbody>
-                            {% for record in inbound_records %}
+                            {% for record in inbound_records | reverse %}  <!-- 倒序显示 -->
                             <tr>
                                 <td>{{ record.item_name }}</td>
                                 <td>{{ record.item_spec }}</td>
@@ -56,6 +57,11 @@
                                 <td>{{ record.inbound_date }}</td>
                                 <td>{{ record.warehouse_number }}号仓库{{ record.shelf_number }}号货架{{ record.layer_number }}层</td>
                                 <td>{{ record.sn_code }}</td>  <!-- 添加 SN 码数据 -->
+                                <td>
+                                    <form method="post" action="{{ url_for('delete_inbound_record', id=record.id) }}">
+                                        <button type="submit" class="delete-button">删除</button>
+                                    </form>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -79,10 +85,11 @@
                                 <th>出库日期</th>
                                 <th>位置</th>
                                 <th>SN码</th>  <!-- 添加 SN 码列 -->
+                                <th>操作</th> <!-- 添加操作列 -->
                             </tr>
                         </thead>
                         <tbody>
-                            {% for record in outbound_records %}
+                            {% for record in outbound_records | reverse %}  <!-- 倒序显示 -->
                             <tr>
                                 <td>{{ record.item_name }}</td>
                                 <td>{{ record.item_spec }}</td>
@@ -92,6 +99,11 @@
                                 <td>{{ record.outbound_date }}</td>
                                 <td>{{ record.warehouse_number }}号仓库{{ record.shelf_number }}号货架{{ record.layer_number }}层</td>
                                 <td>{{ record.sn_code }}</td>  <!-- 添加 SN 码数据 -->
+                                <td>
+                                    <form method="post" action="{{ url_for('delete_outbound_record', id=record.id) }}">
+                                        <button type="submit" class="delete-button">删除</button>
+                                    </form>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -156,5 +168,19 @@
         }
     </script>
 
+    <style>
+        .delete-button {
+            background-color: #f44336;
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .delete-button:hover {
+            background-color: #da190b;
+        }
+    </style>
 
 {% endblock %}

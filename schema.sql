@@ -13,7 +13,7 @@ CREATE TABLE items (
 CREATE TABLE locations (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     warehouse_number INTEGER NOT NULL,
-    shelf_number INTEGER NOT NULL,
+    shelf_number TEXT NOT NULL,
     layer_number INTEGER NOT NULL,
     UNIQUE (warehouse_number, shelf_number, layer_number)
 );
