@@ -28,7 +28,7 @@
                 <input type="text" name="shelf_number" id="shelf_number_in" required><br>
                 <label for="layer_number_in">层数:</label>
                 <input type="number" name="layer_number" id="layer_number_in" required><br>
-                <label for="sn_code_in">SN码:</label>
+                <label for="sn_code_in">SN码(资产需填，缺失填写“已损毁”):</label>
                 <input type="text" id="sn_code_in"><br>  <!-- 移除 name 属性 和 required 属性-->
                 <div id="sn_code_list"></div>  <!-- 用于显示 SN 码悬浮框 -->
                 <input type="hidden" name="sn_codes" id="sn_codes">  <!-- 用于存储 SN 码 -->
@@ -69,7 +69,7 @@
                     {% endfor %}
                 </select><br>
                 </div>
-                <label for="sn_code_out">SN码:</label>
+                <label for="sn_code_out">SN码(资产需选):</label>
                 <select name="sn_code" id="sn_code_out" class="select2-sn">  <!-- 添加 SN 码下拉列表 -->
                     <option value="">请选择SN码</option>
                 </select><br>
