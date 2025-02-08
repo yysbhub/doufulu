@@ -318,11 +318,17 @@ def get_locations():
 @app.route('/get_sns')  # 新的路由
 def get_sns():
     item_id = request.args.get('item_id')
+    location_id = request.args.get('location_id') # 获取 location_id
+
     conn = get_db_connection()
-    # 修改查询: 确保只返回特定 item_id 的非空 SN 码
-    sns = [row[0] for row in conn.execute('SELECT sn_code FROM inbound WHERE item_id = ? AND sn_code IS NOT NULL', (item_id,)).fetchall()]
+    # 修改查询: 确保只返回特定 item_id 和 location_id 的非空 SN 码
+    sns = [row[0] for row in conn.execute('''
+        SELECT sn_code FROM inbound
+        WHERE item_id = ? AND location_id = ? AND sn_code IS NOT NULL
+    ''', (item_id, location_id)).fetchall()]
     conn.close()
     return jsonify(sns)
+
 
 @app.route('/check_duplicate_sn', methods=['POST'])
 def check_duplicate_sn():
