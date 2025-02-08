@@ -15,7 +15,7 @@ def get_db_connection():
 
 def init_db():
     conn = get_db_connection()
-    with open('schema.sql', 'r') as f:
+    with open('schema.sql', 'r', encoding='utf-8') as f:  # 指定编码为 utf-8
         conn.executescript(f.read())
     conn.close()
 
@@ -41,16 +41,10 @@ def add_item():
 
         # 如果没有物品，则从 "1" 开始
         if max_item_code is None:
-            item_code = "1"
+            item_code = 1
         else:
             # 将最大物品编号转换为整数并加 1
-            try:
-                item_code_int = int(max_item_code) + 1
-            except ValueError:
-                # 如果最大物品编号不是整数，则从 "1" 开始
-                item_code_int = 1
-            # 将新的物品编号格式化为字符串
-            item_code = str(item_code_int)
+            item_code = int(max_item_code) + 1
 
         try:
             conn.execute('INSERT INTO items (item_code, item_name, item_spec) VALUES (?, ?, ?)',
@@ -64,6 +58,69 @@ def add_item():
             return jsonify({'status': 'error', 'message': str(e)})
 
     return render_template('add_item.html')
+
+@app.route('/batch_add_item', methods=['POST'])
+def batch_add_item():
+    try:
+        # 检查是否有文件上传
+        if 'excel_file' not in request.files:
+            return jsonify({'status': 'error', 'message': '没有选择文件！'})
+
+        excel_file = request.files['excel_file']
+
+        # 检查文件是否为空
+        if excel_file.filename == '':
+            return jsonify({'status': 'error', 'message': '文件名为空！'})
+
+        # 检查文件类型是否正确
+        if not excel_file.filename.endswith(('.xlsx', '.xls')):
+            return jsonify({'status': 'error', 'message': '文件类型不正确，请选择 Excel 文件！'})
+
+        # 读取 Excel 文件
+        workbook = openpyxl.load_workbook(excel_file)
+        sheet = workbook.active
+
+        conn = get_db_connection()
+
+        # 获取当前最大的物品编号
+        max_item_code = conn.execute('SELECT MAX(item_code) FROM items').fetchone()[0]
+
+        # 如果没有物品，则从 "1" 开始
+        if max_item_code is None:
+            item_code = 1
+        else:
+            # 将最大物品编号转换为整数并加 1
+            item_code = int(max_item_code) + 1
+
+        # 从第二行开始读取数据（跳过表头）
+        for row in sheet.iter_rows(min_row=2, values_only=True):
+            if row[0] is not None:  # 只要物品名称不为空就处理
+                item_name = str(row[0])
+                item_spec = str(row[1]) if row[1] is not None else ""  # 如果物品规格为空，则设置为空字符串
+
+                # 检查物品名称和规格是否已存在
+                existing_item = conn.execute('SELECT * FROM items WHERE item_name = ? AND item_spec = ?', (item_name, item_spec)).fetchone()
+                if existing_item:
+                    continue  # 如果已存在，则跳过
+
+                # 插入数据
+                conn.execute('INSERT INTO items (item_code, item_name, item_spec) VALUES (?, ?, ?)',
+                             (item_code, item_name, item_spec))
+
+                # 递增物品编号
+                item_code += 1
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({'status': 'success', 'message': '物品批量添加成功！'})
+
+    except Exception as e:
+        if conn:
+            conn.rollback()
+            conn.close()
+        return jsonify({'status': 'error', 'message': str(e)})
+
 
 @app.route('/add_stock', methods=['GET', 'POST'])
 def add_stock():
@@ -111,72 +168,6 @@ def add_stock():
     conn.close()
 
     return render_template('add_stock.html', all_items=all_items, stocked_items=stocked_items, locations=locations, selected_item_id=item_id)
-
-@app.route('/batch_add_item', methods=['POST'])
-def batch_add_item():
-    try:
-        # 检查是否有文件上传
-        if 'excel_file' not in request.files:
-            return jsonify({'status': 'error', 'message': '没有选择文件！'})
-
-        excel_file = request.files['excel_file']
-
-        # 检查文件是否为空
-        if excel_file.filename == '':
-            return jsonify({'status': 'error', 'message': '文件名为空！'})
-
-        # 检查文件类型是否正确
-        if not excel_file.filename.endswith(('.xlsx', '.xls')):
-            return jsonify({'status': 'error', 'message': '文件类型不正确，请选择 Excel 文件！'})
-
-        # 读取 Excel 文件
-        workbook = openpyxl.load_workbook(excel_file)
-        sheet = workbook.active
-
-        conn = get_db_connection()
-
-        # 获取当前最大的物品编号
-        max_item_code = conn.execute('SELECT MAX(item_code) FROM items').fetchone()[0]
-
-        # 如果没有物品，则从 "1" 开始
-        if max_item_code is None:
-            item_code = 1
-        else:
-            # 将最大物品编号转换为整数并加 1
-            try:
-                item_code = int(max_item_code) + 1
-            except ValueError:
-                # 如果最大物品编号不是整数，则从 "1" 开始
-                item_code = 1
-
-        # 从第二行开始读取数据（跳过表头）
-        for row in sheet.iter_rows(min_row=2, values_only=True):
-            if row[0] is not None and row[1] is not None:
-                item_name = str(row[0])
-                item_spec = str(row[1])
-
-                # 检查物品名称和规格是否已存在
-                existing_item = conn.execute('SELECT * FROM items WHERE item_name = ? AND item_spec = ?', (item_name, item_spec)).fetchone()
-                if existing_item:
-                    continue  # 如果已存在，则跳过
-
-                # 插入数据
-                conn.execute('INSERT INTO items (item_code, item_name, item_spec) VALUES (?, ?, ?)',
-                             (str(item_code), item_name, item_spec))
-
-                # 递增物品编号
-                item_code += 1
-
-        conn.commit()
-        conn.close()
-
-        return jsonify({'status': 'success', 'message': '物品批量添加成功！'})
-
-    except Exception as e:
-        if conn:
-            conn.rollback()
-            conn.close()
-        return jsonify({'status': 'error', 'message': str(e)})
 
 
 @app.route('/add_stock_in_api', methods=['POST'])

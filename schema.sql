@@ -5,7 +5,7 @@ DROP TABLE IF EXISTS locations;
 
 CREATE TABLE items (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    item_code TEXT NOT NULL,
+    item_code INTEGER UNIQUE NOT NULL,  -- 修改为 INTEGER 类型
     item_name TEXT NOT NULL,
     item_spec TEXT
 );
