@@ -9,6 +9,14 @@
         <button type="submit">注册</button>
     </form>
 
+    <!-- 批量注册 -->
+    <h2>批量注册</h2>
+    <form id="batch-add-item-form" method="post" enctype="multipart/form-data">
+        <label for="excel_file">选择 Excel 文件:</label>
+        <input type="file" id="excel_file" name="excel_file" accept=".xlsx, .xls"><br>
+        <button type="submit">批量注册</button>
+    </form>
+
     <!-- 自定义弹窗 -->
     <div id="custom-alert" class="custom-alert">
         <div class="alert-content">
@@ -91,6 +99,36 @@
                 // 成功提交，显示自定义弹窗
                 showAlert(data.message); // 使用服务器返回的消息
                 document.getElementById('add-item-form').reset(); // 重置表单
+                // 可以选择重定向到其他页面或刷新当前页面
+                //window.location.href = '/items'; // 重定向到物品列表页
+            } else {
+                // 提交失败，显示自定义弹窗
+                showAlert(data.message); // 使用服务器返回的消息
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('发生错误，请检查网络连接！');
+        });
+    });
+
+    // 批量注册表单提交
+    document.getElementById('batch-add-item-form').addEventListener('submit', function(event) {
+        event.preventDefault(); // 阻止表单的默认提交行为
+
+        // 使用 FormData 对象获取表单数据
+        const formData = new FormData(this);
+
+        // 发送 POST 请求到 /batch_add_item 路由
+        fetch('/batch_add_item', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json()) // 解析 JSON 响应
+        .then(data => {
+            if (data.status === 'success') {
+                // 成功提交，显示自定义弹窗
+                showAlert(data.message); // 使用服务器返回的消息
                 // 可以选择重定向到其他页面或刷新当前页面
                 //window.location.href = '/items'; // 重定向到物品列表页
             } else {
