@@ -269,13 +269,14 @@ def add_stock_out_api():
 
         # 限制出库数量
         if outbound_qty > current_stock:
-            outbound_qty = current_stock
-
-        conn.execute('INSERT INTO outbound (item_id, outbound_qty, outbound_person, outbound_purpose, outbound_date, location_id, sn_code) VALUES (?, ?, ?, ?, ?, ?, ?)',
-                     (item_id, outbound_qty, outbound_person, outbound_purpose, outbound_date, location_id, sn_code))
-        conn.commit()
-        conn.close()
-        return jsonify({'status': 'success', 'message': '物品出库成功！'})
+            #outbound_qty = current_stock
+            return jsonify({'status': 'error', 'message': '该物品库存不足！'})
+        else:
+            conn.execute('INSERT INTO outbound (item_id, outbound_qty, outbound_person, outbound_purpose, outbound_date, location_id, sn_code) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                        (item_id, outbound_qty, outbound_person, outbound_purpose, outbound_date, location_id, sn_code))
+            conn.commit()
+            conn.close()
+            return jsonify({'status': 'success', 'message': '物品出库成功！'})
     except Exception as e:
         if conn:
             conn.rollback()

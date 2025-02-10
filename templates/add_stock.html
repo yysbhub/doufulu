@@ -157,6 +157,11 @@ $(document).ready(function() {
     var itemIdInput = document.getElementById('item_id_in');
     var snCodeInput = document.getElementById('sn_code_in');
 
+    // 获取出库数量输入框
+    var outboundQtyInput = document.getElementById('outbound_qty');
+    // 获取 SN 码下拉列表
+    var snCodeOutSelect = document.getElementById('sn_code_out');
+
     // 入库 SN 码输入框粘贴事件
     document.getElementById('sn_code_in').addEventListener('paste', function(event) {
         event.preventDefault(); // 阻止默认行为
@@ -277,6 +282,19 @@ $(document).ready(function() {
         }
         document.getElementById('inbound_qty').value = snCodes.length;
     }
+
+    // 监听 SN 码下拉列表的变化
+    $('#sn_code_out').on('change', function() {
+        if (this.value) {
+            // 如果选择了 SN 码
+            outboundQtyInput.value = 1; // 设置数量为 1
+            outboundQtyInput.readOnly = true; // 禁用输入框
+        } else {
+            // 如果取消选择 SN 码
+            outboundQtyInput.value = ''; // 清空数量
+            outboundQtyInput.readOnly = false; // 启用输入框
+        }
+    });
 
     // 入库表单提交
     $('#inbound-form').submit(function(event) {
