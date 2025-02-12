@@ -23,7 +23,14 @@
                 <label for="inbound_date">入库日期:</label>
                 <input type="date" name="inbound_date" id="inbound_date" required><br>
                 <label for="warehouse_number_in">仓库号:</label>
-                <input type="number" name="warehouse_number" id="warehouse_number_in" required><br>
+                <select name="warehouse_number" id="warehouse_number_in" required>
+                    <option value="">请选择仓库号</option>
+                    <option value="101">101</option>
+                    <option value="601">601</option>
+                    <option value="602">602</option>
+                    <option value="701">701</option>
+                    <option value="702">702</option>
+                </select><br>
                 <label for="shelf_number_in">货架号:</label>
                 <input type="text" name="shelf_number" id="shelf_number_in" required><br>
                 <label for="layer_number_in">层数:</label>

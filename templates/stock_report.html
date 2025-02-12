@@ -226,33 +226,55 @@
         }
 
         function exportTableToCSV(tableId, filename) {
-            var csv = [];
-            var table = document.getElementById(tableId);
-            var rows = table.querySelectorAll("tr");
+    var csv = [];
+    var table = document.getElementById(tableId);
+    var rows = table.querySelectorAll("tr");
 
-            for (var i = 0; i < rows.length; i++) {
-                var row = [];
-                var cols = rows[i].querySelectorAll("td, th");
+    // 获取表头
+    var headerRow = [];
+    var headerCols = rows[0].querySelectorAll("th");
+    var operationColumnIndex = -1; // 记录 "操作" 列的索引
 
-                // 忽略最后一列
-                var colsLength = cols.length - 1;
+    for (var j = 0; j < headerCols.length; j++) {
+        let data = headerCols[j].textContent.replace(/,/g, "，").replace(/(\r\n|\n|\r)/gm, "");
+        data = '"' + data + '"';
 
-                for (var j = 0; j < colsLength; j++) {
-                    // 清理数据，移除逗号和换行符，并用双引号包裹
-                    let data = cols[j].textContent.replace(/,/g, "，").replace(/(\r\n|\n|\r)/gm, "");
-                    data = '"' + data + '"';
-                    row.push(data);
-                }
-
-                csv.push(row.join(","));
-            }
-
-            // 添加 BOM 标识，解决中文乱码问题
-            var csvData = "\uFEFF" + csv.join("\r\n");
-
-            // 下载 CSV 文件
-            downloadCSV(csvData, filename);
+        if (data.includes("操作")) { // 查找表头为 "操作" 的列
+            operationColumnIndex = j;
         }
+
+        headerRow.push(data);
+    }
+
+    // 将表头写入 CSV，但不包含 "操作" 列
+    let filteredHeaderRow = headerRow.filter((item, index) => index !== operationColumnIndex);
+    csv.push(filteredHeaderRow.join(","));
+
+
+    for (var i = 1; i < rows.length; i++) { // 从第二行开始，跳过表头
+        var row = [];
+        var cols = rows[i].querySelectorAll("td");
+
+        // 遍历所有列，但不包含 "操作" 列
+        for (var j = 0; j < cols.length; j++) {
+            if (j === operationColumnIndex) {
+                continue; // 跳过 "操作" 列
+            }
+            let data = cols[j].textContent.replace(/,/g, "，").replace(/(\r\n|\n|\r)/gm, "");
+            data = '"' + data + '"';
+            row.push(data);
+        }
+
+        csv.push(row.join(","));
+    }
+
+    // 添加 BOM 标识，解决中文乱码问题
+    var csvData = "\uFEFF" + csv.join("\r\n");
+
+    // 下载 CSV 文件
+    downloadCSV(csvData, filename);
+}
+
 
         function downloadCSV(csvData, filename) {
             var csvFile;
